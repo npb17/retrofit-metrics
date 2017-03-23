@@ -1,7 +1,7 @@
 Retrofit Metrics
 ================
 
-Adds support for http://metrics.dropwizard.io Timed annotations to retrofit2 clients.
+Adds support for http://metrics.dropwizard.io `Timed` annotations to retrofit2 clients.
 
 ### Download from Maven
 
@@ -45,6 +45,19 @@ public class Application {
         client.timer1();
     }
 }
+```
+
+### Usage with RxJava
+
+You must add `TimedCallAdapterFactory` before adding the `RxJavaCallAdapterFactory` to the `Retrofit.Builder`.
+ 
+```java
+TestClient client = new Retrofit.Builder()
+    .addCallAdapterFactory(new TimedCallAdapterFactory(metrics))
+    .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+    .baseUrl("http://localhost:8080/")
+    .build()
+    .create(TestClient.class);
 ```
 
 ### See Also

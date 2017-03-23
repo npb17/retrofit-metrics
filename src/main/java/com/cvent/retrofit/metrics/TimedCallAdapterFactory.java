@@ -12,7 +12,6 @@ import retrofit2.Retrofit;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Objects;
 
@@ -32,10 +31,6 @@ public class TimedCallAdapterFactory extends CallAdapter.Factory {
 
     @Override
     public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
-        if (getRawType(returnType) != Call.class) {
-            return null;
-        }
-
         Timed timed = getTimedAnnotation(annotations);
         if (timed == null) {
             return null;
@@ -47,8 +42,8 @@ public class TimedCallAdapterFactory extends CallAdapter.Factory {
             throw new IllegalArgumentException("Timer annotation requires a non-empty name");
         }
 
-        Type responseType = getParameterUpperBound(0, (ParameterizedType) returnType);
-        return new TimedCallAdapter(responseType, metrics.timer(name));
+        CallAdapter<?> nextCallAdapter = retrofit.nextCallAdapter(this, returnType, annotations);
+        return new TimedCallAdapter(metrics.timer(name), nextCallAdapter);
     }
 
     private Timed getTimedAnnotation(Annotation[] annotations) {
@@ -63,59 +58,58 @@ public class TimedCallAdapterFactory extends CallAdapter.Factory {
     /**
      * Creates wrapped TimedCall objects.
      */
-    private static final class TimedCallAdapter implements CallAdapter<Call<?>> {
-        private final Type responseType;
+    private static final class TimedCallAdapter<T> implements CallAdapter<T> {
         private final Timer timer;
+        private final CallAdapter<?> nextCallAdapter;
 
-        private TimedCallAdapter(Type responseType, Timer timer) {
-            this.responseType = responseType;
+        private TimedCallAdapter(Timer timer, CallAdapter<?> nextCallAdapter) {
             this.timer = timer;
+            this.nextCallAdapter = nextCallAdapter;
         }
 
         @Override
         public Type responseType() {
-            return responseType;
+            return nextCallAdapter.responseType();
         }
 
         @Override
-        public <R> Call<R> adapt(Call<R> call) {
-            return new TimedCall<R>(call, timer);
+        public <R> T adapt(Call<R> call) {
+            return (T) nextCallAdapter.adapt(new TimedCall(call, timer));
         }
     }
 
     /**
      * Wraps Call request/response methods in a timer.
-     * @param <R>
      */
-    private static final class TimedCall<R> implements Call<R> {
+    private static final class TimedCall<T> implements Call<T> {
         private final Timer timer;
-        private final Call<R> wrappedCall;
+        private final Call<T> wrappedCall;
 
-        private TimedCall(Call<R> call, Timer timer) {
+        private TimedCall(Call<T> call, Timer timer) {
             this.wrappedCall = call;
             this.timer = timer;
         }
 
         @Override
-        public Response<R> execute() throws IOException {
+        public Response<T> execute() throws IOException {
             try (Timer.Context ctx = timer.time()) {
                 return wrappedCall.execute();
             }
         }
 
         @Override
-        public void enqueue(Callback<R> callback) {
+        public void enqueue(Callback callback) {
             Timer.Context ctx = timer.time();
 
-            wrappedCall.enqueue(new Callback<R>() {
+            wrappedCall.enqueue(new Callback<T>() {
                 @Override
-                public void onResponse(Call<R> call, Response<R> response) {
+                public void onResponse(Call<T> call, Response<T> response) {
                     ctx.stop();
                     callback.onResponse(call, response);
                 }
 
                 @Override
-                public void onFailure(Call<R> call, Throwable t) {
+                public void onFailure(Call<T> call, Throwable t) {
                     ctx.stop();
                     callback.onFailure(call, t);
                 }
@@ -138,8 +132,8 @@ public class TimedCallAdapterFactory extends CallAdapter.Factory {
         }
 
         @Override
-        public Call<R> clone() {
-            return new TimedCall<>(wrappedCall.clone(), timer);
+        public Call<T> clone() {
+            return new TimedCall<T>(wrappedCall.clone(), timer);
         }
 
         @Override

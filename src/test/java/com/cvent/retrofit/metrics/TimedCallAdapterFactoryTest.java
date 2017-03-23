@@ -12,21 +12,26 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
+import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
+import rx.Observable;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 public class TimedCallAdapterFactoryTest {
     private static final String TIMER_NAME = "test.timer";
+    private static final String RESPONSE_BODY = "{ \"name\": \"The body with no name\" }";
+    private static final NamedObject RESPONSE_OBJECT = new NamedObject("The body with no name");
 
     private MockWebServer server;
     private MetricRegistry metrics;
-    private TimedClient client;
+    private Retrofit retrofit;
 
     @Before
     public void before() throws IOException {
@@ -35,14 +40,15 @@ public class TimedCallAdapterFactoryTest {
         server.start();
 
         MockResponse response = new MockResponse();
-        response.setBody("{}");
+        response.setBody(RESPONSE_BODY);
         server.enqueue(response);
 
-        client = new Retrofit.Builder()
+        retrofit = new Retrofit.Builder()
+                .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(new TimedCallAdapterFactory(metrics))
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                 .baseUrl(server.url("/").toString())
-                .build()
-                .create(TimedClient.class);
+                .build();
     }
 
     @After
@@ -52,8 +58,10 @@ public class TimedCallAdapterFactoryTest {
 
     @Test
     public void synchronous() throws IOException {
-        Response<Void> response = client.timed().execute();
+        TimedClient client = retrofit.create(TimedClient.class);
+        Response<NamedObject> response = client.timed().execute();
         assertThat(response.code()).isEqualTo(HttpURLConnection.HTTP_OK);
+        assertThat(response.body()).isEqualTo(RESPONSE_OBJECT);
 
         Timer timer = metrics.timer(TIMER_NAME);
         assertThat(timer).isNotNull();
@@ -64,24 +72,25 @@ public class TimedCallAdapterFactoryTest {
     @Test
     public void asynchronous() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
+        TimedClient client = retrofit.create(TimedClient.class);
 
-        client.timed().enqueue(new Callback<Void>() {
+        client.timed().enqueue(new Callback<NamedObject>() {
             @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
+            public void onResponse(Call<NamedObject> call, Response<NamedObject> response) {
                 try {
-                    assertEquals(HttpURLConnection.HTTP_OK, response.code());
-                }
-                finally {
+                    assertThat(response.code()).isEqualTo(HttpURLConnection.HTTP_OK);
+                    assertThat(response.body()).isEqualTo(RESPONSE_OBJECT);
+                } finally {
                     latch.countDown();
                 }
             }
 
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {
+            public void onFailure(Call<NamedObject> call, Throwable t) {
                 latch.countDown();
             }
         });
-        latch.await();
+        latch.await(1L, TimeUnit.SECONDS);
 
         Timer timer = metrics.timer(TIMER_NAME);
         assertThat(timer).isNotNull();
@@ -89,18 +98,74 @@ public class TimedCallAdapterFactoryTest {
         assertThat(timer.getMeanRate()).isGreaterThan(0);
     }
 
+    @Test
+    public void rxJava() throws Exception {
+        CountDownLatch latch = new CountDownLatch(1);
+
+        RxJavaClient client = retrofit.create(RxJavaClient.class);
+        client.timed()
+                .subscribe(response -> {
+                    try {
+                        assertThat(response.code()).isEqualTo(HttpURLConnection.HTTP_OK);
+                        assertThat(response.body()).isEqualTo(RESPONSE_OBJECT);
+                    } finally {
+                        latch.countDown();
+                    }
+                }, error -> {
+                    throw new RuntimeException("Test failed");
+                });
+        latch.await(1L, TimeUnit.SECONDS);
+
+        Timer timer = metrics.timer(TIMER_NAME);
+        assertThat(timer).isNotNull();
+        assertThat(timer.getCount()).isEqualTo(1);
+        assertThat(timer.getMeanRate()).isGreaterThan(0);
+    }
+
+
     @Test(expected = IllegalArgumentException.class)
-    public void testTimedMethodWithNoName() throws IOException {
+    public void timedMethodWithNoName() throws IOException {
+        TimedClient client = retrofit.create(TimedClient.class);
         client.timedWithNoName();
+    }
+
+    @Test
+    public void methodWithNoTimedAnnotation() throws IOException {
+        TimedClient client = retrofit.create(TimedClient.class);
+        Response<NamedObject> response = client.methodWithNoTimedAnnotation().execute();
+
+        assertThat(response.code()).isEqualTo(HttpURLConnection.HTTP_OK);
+        assertThat(response.body()).isEqualTo(RESPONSE_OBJECT);
     }
 
     public interface TimedClient {
         @Timed(name = TIMER_NAME)
         @GET(".")
-        Call<Void> timed();
+        Call<NamedObject> timed();
 
         @Timed
         @GET(".")
-        Call<Void> timedWithNoName();
+        Call<NamedObject> timedWithNoName();
+
+        @GET(".")
+        Call<NamedObject> methodWithNoTimedAnnotation();
+    }
+
+    public interface RxJavaClient {
+        @Timed(name = TIMER_NAME)
+        @GET(".")
+        Observable<Response<NamedObject>> timed();
+    }
+
+    public static class NamedObject {
+        private final String name;
+
+        public NamedObject(String name) {
+            this.name = name;
+        }
+
+        public boolean equals(Object obj) {
+            return ((NamedObject) obj).name.equals(name);
+        }
     }
 }
