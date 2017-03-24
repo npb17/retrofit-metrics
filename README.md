@@ -25,13 +25,13 @@ import retrofit2.http.GET;
 
 public class Application {
     public interface TestClient {
-        @Timed(name = "timer1")
-        @GET("/timer1")
-        Call<String> timer1();
+        @Timed(name = "endpoint1")
+        @GET("/endpoint1")
+        Call<String> endpoint1();
 
-        @Timed(name = "timer2")
-        @GET("/timer2")
-        Call<String> timer2();
+        @Timed(name = "endpoint2")
+        @GET("/endpoint2")
+        Call<String> endpoint2();
     }
 
     public static void main(String[] args) throws Exception {
@@ -42,7 +42,7 @@ public class Application {
                 .baseUrl("http://localhost:8080/")
                 .build()
                 .create(TestClient.class);
-        client.timer1();
+        client.endpoint1();
     }
 }
 ```
