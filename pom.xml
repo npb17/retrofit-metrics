@@ -3,8 +3,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>com.cvent</groupId>
-        <artifactId>maven-parent</artifactId>
-        <version>3.10</version>
+        <artifactId>cvent-parent</artifactId>
+        <version>1.0.0</version>
         <relativePath/>
     </parent>
 
@@ -17,6 +17,7 @@
 
     <name>retrofit-metrics</name>
     <description>Library to support dropwizard metrics with retrofit clients using Timed annotation</description>
+    <url>https://github.com/cvent/retrofit-metrics</url>
 
     <properties>
         <retrofit.version>2.1.0</retrofit.version>
@@ -81,7 +82,25 @@
     </dependencies>
 
     <scm>
-        <developerConnection>scm:git:ssh://git@stash:7999/INT/retrofit-metrics.git</developerConnection>
+        <url>https://github.com/cvent/retrofit-metrics</url>
+        <connection>scm:git:git@github.com/cvent/retrofit-metrics.git</connection>
+        <developerConnection>scm:git:git@github.com:cvent/retrofit-metrics.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Cvent</name>
+            <email>rd@cvent.com</email>
+            <organization>Cvent</organization>
+            <organizationUrl>https://github.com/cvent</organizationUrl>
+        </developer>
+    </developers>
 </project>

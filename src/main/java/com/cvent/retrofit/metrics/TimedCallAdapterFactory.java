@@ -57,6 +57,7 @@ public class TimedCallAdapterFactory extends CallAdapter.Factory {
 
     /**
      * Creates wrapped TimedCall objects.
+     * @param <T>
      */
     private static final class TimedCallAdapter<T> implements CallAdapter<T> {
         private final Timer timer;
@@ -80,6 +81,7 @@ public class TimedCallAdapterFactory extends CallAdapter.Factory {
 
     /**
      * Wraps Call request/response methods in a timer.
+     * @param <T>
      */
     private static final class TimedCall<T> implements Call<T> {
         private final Timer timer;
