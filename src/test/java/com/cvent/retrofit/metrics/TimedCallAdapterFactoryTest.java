@@ -19,11 +19,17 @@ import rx.Observable;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * A unit test for TimedCallAdapterFactory
+ * 
+ * @author bryan
+ */
 public class TimedCallAdapterFactoryTest {
     private static final String TIMER_NAME = "test.timer";
     private static final String RESPONSE_BODY = "{ \"name\": \"The body with no name\" }";
@@ -138,6 +144,9 @@ public class TimedCallAdapterFactoryTest {
         assertThat(response.body()).isEqualTo(RESPONSE_OBJECT);
     }
 
+    /**
+     * A test client interface
+     */
     public interface TimedClient {
         @Timed(name = TIMER_NAME)
         @GET(".")
@@ -151,12 +160,18 @@ public class TimedCallAdapterFactoryTest {
         Call<NamedObject> methodWithNoTimedAnnotation();
     }
 
+    /**
+     * A test client interface
+     */
     public interface RxJavaClient {
         @Timed(name = TIMER_NAME)
         @GET(".")
         Observable<Response<NamedObject>> timed();
     }
 
+    /**
+     * A test data class
+     */
     public static class NamedObject {
         private final String name;
 
@@ -164,6 +179,14 @@ public class TimedCallAdapterFactoryTest {
             this.name = name;
         }
 
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = 79 * hash + Objects.hashCode(this.name);
+            return hash;
+        }
+
+        @Override
         public boolean equals(Object obj) {
             return ((NamedObject) obj).name.equals(name);
         }

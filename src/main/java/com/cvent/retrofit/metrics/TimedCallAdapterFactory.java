@@ -30,7 +30,7 @@ public class TimedCallAdapterFactory extends CallAdapter.Factory {
     }
 
     @Override
-    public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+    public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
         Timed timed = getTimedAnnotation(annotations);
         if (timed == null) {
             return null;
@@ -42,7 +42,7 @@ public class TimedCallAdapterFactory extends CallAdapter.Factory {
             throw new IllegalArgumentException("Timer annotation requires a non-empty name");
         }
 
-        CallAdapter<?> nextCallAdapter = retrofit.nextCallAdapter(this, returnType, annotations);
+        CallAdapter<?, ?> nextCallAdapter = retrofit.nextCallAdapter(this, returnType, annotations);
         return new TimedCallAdapter(metrics.timer(name), nextCallAdapter);
     }
 
@@ -57,13 +57,14 @@ public class TimedCallAdapterFactory extends CallAdapter.Factory {
 
     /**
      * Creates wrapped TimedCall objects.
+     * @param <R>
      * @param <T>
      */
-    private static final class TimedCallAdapter<T> implements CallAdapter<T> {
+    private static final class TimedCallAdapter<R, T> implements CallAdapter<R, T> {
         private final Timer timer;
-        private final CallAdapter<?> nextCallAdapter;
+        private final CallAdapter<?, ?> nextCallAdapter;
 
-        private TimedCallAdapter(Timer timer, CallAdapter<?> nextCallAdapter) {
+        private TimedCallAdapter(Timer timer, CallAdapter<?, ?> nextCallAdapter) {
             this.timer = timer;
             this.nextCallAdapter = nextCallAdapter;
         }
@@ -74,7 +75,7 @@ public class TimedCallAdapterFactory extends CallAdapter.Factory {
         }
 
         @Override
-        public <R> T adapt(Call<R> call) {
+        public T adapt(Call<R> call) {
             return (T) nextCallAdapter.adapt(new TimedCall(call, timer));
         }
     }
