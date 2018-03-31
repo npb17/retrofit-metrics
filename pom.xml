@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.cvent</groupId>
         <artifactId>cvent-parent</artifactId>
-        <version>2.0.0</version>
+        <version>2.0.1-SNAPSHOT</version>
         <relativePath />
     </parent>
 
@@ -19,21 +19,19 @@
     <url>https://github.com/cvent/retrofit-metrics</url>
 
     <properties>
-        <retrofit.version>2.3.0</retrofit.version>
-        <metrics3.version>3.2.2</metrics3.version>
-        <slf4j.version>1.7.24</slf4j.version>
+        <retrofit.version>2.4.0</retrofit.version>
+        <metrics4.version>4.0.2</metrics4.version>
+        <slf4j.version>1.7.25</slf4j.version>
         
         <!-- test dependencies -->
-        <assertj.version>3.6.2</assertj.version>
-        <junit.version>4.12</junit.version>
-        <mockwebserver.version>3.8.0</mockwebserver.version>
+        <mockwebserver.version>3.10.0</mockwebserver.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-annotation</artifactId>
-            <version>${metrics3.version}</version>
+            <version>${metrics4.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -44,7 +42,7 @@
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
-            <version>${metrics3.version}</version>
+            <version>${metrics4.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -81,19 +79,6 @@
             <groupId>com.squareup.retrofit2</groupId>
             <artifactId>adapter-rxjava</artifactId>
             <version>${retrofit.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
