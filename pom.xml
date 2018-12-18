@@ -11,7 +11,7 @@
 
     <groupId>com.cvent</groupId>
     <artifactId>retrofit-metrics</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>retrofit-metrics</name>
@@ -19,13 +19,13 @@
     <url>https://github.com/cvent/retrofit-metrics</url>
 
     <properties>
-        <retrofit.version>2.1.0</retrofit.version>
+        <retrofit.version>2.5.0</retrofit.version>
         <metrics.version>3.0.2</metrics.version>
 
         <!-- test dependencies -->
         <assertj.version>3.6.2</assertj.version>
         <junit.version>4.12</junit.version>
-        <mockwebserver.version>3.3.0</mockwebserver.version>
+        <mockwebserver.version>3.12.0</mockwebserver.version>
     </properties>
 
     <dependencies>
@@ -84,7 +84,7 @@
         <url>https://github.com/cvent/retrofit-metrics</url>
         <connection>scm:git:git@github.com/cvent/retrofit-metrics.git</connection>
         <developerConnection>scm:git:git@github.com:cvent/retrofit-metrics.git</developerConnection>
-        <tag>retrofit-metrics-1.0.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <licenses>
