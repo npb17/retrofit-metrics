@@ -84,7 +84,7 @@
         <url>https://github.com/cvent/retrofit-metrics</url>
         <connection>scm:git:git@github.com/cvent/retrofit-metrics.git</connection>
         <developerConnection>scm:git:git@github.com:cvent/retrofit-metrics.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>retrofit-metrics-1.0.0</tag>
     </scm>
 
     <licenses>
